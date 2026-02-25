@@ -113,7 +113,7 @@ class AuthServiceTest {
                 .role(Role.ROLE_USER)
                 .build();
         
-        ReflectionTestUtils.setField(authService, "refreshTokenValidityInSeconds", 604800L);
+        ReflectionTestUtils.setField(authService, "refreshTokenExpirationMs", 604800000L);
 
         given(userRepository.findByEmail(request.getEmail())).willReturn(Optional.of(user));
         given(passwordEncoder.matches(request.getPassword(), user.getPassword())).willReturn(true);

@@ -13,9 +13,9 @@ public class TokenBlacklistService {
     private final Cache<String, Boolean> blacklist;
 
     public TokenBlacklistService(
-            @Value("${jwt.access-token-validity-in-seconds}") long validityInSeconds) {
+            @Value("${app.jwt.access-expiration}") long accessExpirationMs) {
         this.blacklist = Caffeine.newBuilder()
-                .expireAfterWrite(validityInSeconds, TimeUnit.SECONDS)
+                .expireAfterWrite(accessExpirationMs, TimeUnit.MILLISECONDS)
                 .maximumSize(10_000)
                 .build();
     }

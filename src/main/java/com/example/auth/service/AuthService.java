@@ -21,6 +21,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.warrenstrange.googleauth.GoogleAuthenticator;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
@@ -41,8 +43,8 @@ public class AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
 
-    @Value("${jwt.refresh-token-validity-in-seconds}")
-    private long refreshTokenValidityInSeconds;
+    @Value("${app.jwt.refresh-expiration}")
+    private long refreshTokenExpirationMs;
 
     // ── 회원가입 ────────────────────────────────────────────────────────────
     @Transactional
@@ -143,7 +145,7 @@ public class AuthService {
                 throw new IllegalArgumentException("인증 코드가 틀리거나 만료되었습니다.");
             }
         } else if (user.getTwoFactorType() == TwoFactorType.GOOGLE_OTP) {
-            com.warrenstrange.googleauth.GoogleAuthenticator gAuth = new com.warrenstrange.googleauth.GoogleAuthenticator();
+            GoogleAuthenticator gAuth = new GoogleAuthenticator();
             try {
                 int code = Integer.parseInt(request.getCode());
                 if (!gAuth.authorize(user.getTwoFactorSecret(), code)) {
@@ -303,7 +305,7 @@ public class AuthService {
     private String createRefreshToken(String email) {
         String token = UUID.randomUUID().toString();
         String tokenHash = hashToken(token);
-        LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(refreshTokenValidityInSeconds);
+        LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(refreshTokenExpirationMs / 1000);
 
         RefreshToken refreshToken = refreshTokenRepository.findByEmail(email).orElse(null);
         if (refreshToken != null) {
