@@ -258,6 +258,19 @@
     <script>
         // Init
         window.addEventListener('DOMContentLoaded', () => {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                const params = new URLSearchParams(hash);
+                const accessToken = params.get('accessToken');
+                const refreshToken = params.get('refreshToken');
+                if (accessToken) {
+                    localStorage.setItem('token', accessToken);
+                    if (refreshToken) {
+                        localStorage.setItem('refreshToken', refreshToken);
+                    }
+                    window.history.replaceState(null, null, window.location.pathname);
+                }
+            }
             loadDashboard();
         });
 

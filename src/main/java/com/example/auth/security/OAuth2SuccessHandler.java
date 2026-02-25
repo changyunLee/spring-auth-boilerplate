@@ -35,7 +35,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         AuthDto.TokenResponse tokens = authService.generateOAuth2Tokens(email, role);
 
         // fragment(#)를 사용하여 토큰이 서버 로그 및 Referer 헤더에 기록되지 않도록 함
-        String redirectUrl = frontendUrl + "/index.html"
+        String redirectUrl = frontendUrl + "/dashboard.html"
                 + "#accessToken=" + tokens.getAccessToken()
                 + "&refreshToken=" + tokens.getRefreshToken();
 

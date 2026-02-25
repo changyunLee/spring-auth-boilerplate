@@ -203,12 +203,13 @@
                 const data = await response.json();
 
                 if (!response.ok) {
-                    if (data.mfaRequired) {
-                        sessionStorage.setItem('pendingEmail', email);
-                        render2fa(data.mfaType);
-                        return;
-                    }
                     throw new Error(data.message || '로그인 실패');
+                }
+
+                if (data.status === 'REQUIRES_2FA') {
+                    sessionStorage.setItem('pendingEmail', email);
+                    render2fa(data.twoFactorType);
+                    return;
                 }
 
                 localStorage.setItem('token', data.accessToken);

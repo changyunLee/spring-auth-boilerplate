@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>2차 인증 코드</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 0;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <h2 style="color: #1e293b; margin-top: 0;">2차 인증 코드 안내</h2>
+            <p style="color: #475569; font-size: 16px; line-height: 1.5;">
+                안녕하세요, <span th:text="${to}">고객님</span>.<br>
+                로그인을 완료하기 위해 아래의 6자리 인증 코드를 입력해주세요.
+            </p>
+            <div style="text-align: center; margin: 40px 0;">
+                <div style="display: inline-block; padding: 20px 40px; background-color: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 32px; font-weight: bold; letter-spacing: 12px; color: #2563eb;" th:text="${code}">
+                    000000
+                </div>
+            </div>
+            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+            <p style="color: #94a3b8; font-size: 12px; text-align: center;">
+                본 메일은 발신전용 메일입니다.<br>
+                본인이 로그인을 시도하지 않은 경우, 비밀번호를 즉시 변경해 주시기 바랍니다.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

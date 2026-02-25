@@ -10,6 +10,7 @@
 * **다중 2단계 인증(2FA)**:
   * Google Authenticator (TOTP)
   * Email OTP 인증
+  * (관리자 또는 사용자 설정에서 2FA 방식 변경 가능)
 * **이메일 인증**: 회원가입 후 이메일 인증 코드를 통한 최종 계정 활성화
 * **비밀번호 정책 강제**: 영대소문자 + 숫자 + 특수기호 최소 8자리 검증 (`@ValidPassword`)
 
@@ -19,6 +20,10 @@
   * 관리자에 의한 강제 정지(Suspend) 및 정지 사유 메모 기록
 * **트래픽 및 무차별 대입(Brute-Force) 방어**: 
   * 로그인 엔드포인트에 **Bucket4j & Caffeine Cache** 기반 Rate Limiting(속도 제한) 적용
+* **토큰 탈취 대비 및 만료 관리**:
+  * DB에 암호화된 상태로 Refresh Token 저장 (가족성 식별)
+  * 매일 새벽 오래된 Access/Refresh 토큰 자동 삭제 스케줄링 배치 작동 (Quartz / Spring Scheduler)
+* **어드민 권한 제어 방어**: 유일한 최고 관리자는 계정 강등 및 삭제 불가 처리
 
 ### 3. 모니터링 및 로깅
 * **Spring Boot Actuator**: 시스템 헬스 모니터링
@@ -31,9 +36,34 @@
 
 ---
 
+## 🛠 기술 스택 (Tech Stack)
+
+### Backend
+- **Java 17** / **Spring Boot 3**
+- **Spring Security** (JWT + OAuth2 Client)
+- **Spring Data JPA** (Hibernate) / **MariaDB**
+- **JavaMailSender** (이메일 인증)
+- **Bucket4j & Caffeine** (Rate Limiter)
+- **Google Authenticator (ZXing)**
+- **Spring Boot Actuator**
+
+### Frontend
+- **Vanilla JavaScript** (ES6+)
+- **Tailwind CSS** (Light Theme UI)
+- **Chart.js** (관리자 통계 차트)
+
+---
+
 ## ⚙️ 환경 설정 및 실행 (`application.yml`)
 
-`src/main/resources/application.yml` 파일에서 로컬 데이터베이스 및 SMTP, OAuth2 환경 변수를 본인의 개발 환경에 맞춰 세팅하세요.
+`src/main/resources/application.yml` (또는 `application-dev.yml` 등) 파일에서 로컬 데이터베이스 및 SMTP, OAuth2 환경 변수를 본인의 개발 환경에 맞춰 덮어쓰거나 시스템 환경 변수(Environment Variables)로 주입하세요.
+
+### 필수 셋업 요소
+1. **MariaDB 설치**: `auth_db` 생성 필수
+2. **Google OAuth2 Credentials**: Google Cloud Console에서 `clientId`, `clientSecret` 발급 및 세팅
+3. **메일 서버 (SMTP)**: 이메일 전송을 위한 SMTP 설정 (예: 구글 앱 비밀번호 발급 등)
+4. **JWT Secret Key**: 프로덕션 환경에서는 반드시 256bit 이상의 안전한 문자열로 교체 필요
+5. **초기 Admin 설정**: `ADMIN_INITIAL_EMAIL`, `ADMIN_INITIAL_PASSWORD` 프로퍼티 기반으로 기동 시 최초 1회 Admin 계정 시드 초기화
 
 ```bash
 # Mac / Linux 실행
