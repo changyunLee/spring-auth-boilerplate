@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -20,6 +21,7 @@ public class EmailService {
     @Value("${app.frontend-url:http://localhost:8080}")
     private String frontendUrl;
 
+    @Async
     public void sendVerificationEmail(String to, String token) {
         Context ctx = new Context();
         ctx.setVariable("link", frontendUrl + "/verify-email.html?token=" + token);
@@ -27,6 +29,7 @@ public class EmailService {
         sendHtml(to, "[Spring Auth] 이메일 인증", "email/verification", ctx);
     }
 
+    @Async
     public void send2FACodeEmail(String to, String code) {
         Context ctx = new Context();
         ctx.setVariable("code", code);
@@ -34,6 +37,7 @@ public class EmailService {
         sendHtml(to, "[Spring Auth] 2차 인증 코드", "email/two-factor-code", ctx);
     }
 
+    @Async
     public void sendPasswordResetEmail(String to, String token) {
         Context ctx = new Context();
         ctx.setVariable("link", frontendUrl + "/reset-password.html?token=" + token);
