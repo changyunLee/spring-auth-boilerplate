@@ -42,6 +42,7 @@ public class AuthService {
     private final EmailVerificationTokenRepository emailVerificationTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
+    private final TotpQrService totpQrService;
 
     @Value("${app.jwt.refresh-expiration}")
     private long refreshTokenExpirationMs;
@@ -114,13 +115,18 @@ public class AuthService {
             user.generateTwoFactorCode(code);
             user.startTwoFactor();
             emailService.send2FACodeEmail(user.getEmail(), code);
-            return AuthDto.TokenResponse.requires2FA("EMAIL", user.getEmail(), null);
+            return AuthDto.TokenResponse.requires2FA("EMAIL", user.getEmail(), null, null);
         }
 
         if (user.getTwoFactorType() == TwoFactorType.GOOGLE_OTP) {
             user.startTwoFactor();
-            // 첫 로그인 성공 전까지 지속적으로 QR 코드를 보여주도록 시크릿 키 반환 (사용자 요청 반영)
-            return AuthDto.TokenResponse.requires2FA("GOOGLE_OTP", user.getEmail(), user.getTwoFactorSecret());
+            String secret = null;
+            String qr = null;
+            if (!user.isTwoFactorVerified()) {
+                secret = user.getTwoFactorSecret();
+                qr = totpQrService.generateQrCodeBase64(user.getEmail(), secret);
+            }
+            return AuthDto.TokenResponse.requires2FA("GOOGLE_OTP", user.getEmail(), secret, qr);
         }
 
         String accessToken = jwtTokenProvider.createToken(user.getEmail(), user.getRole().name());
@@ -156,6 +162,10 @@ public class AuthService {
             }
         } else {
             throw new IllegalArgumentException("2차 인증이 설정되지 않은 사용자입니다.");
+        }
+
+        if (!user.isTwoFactorVerified()) {
+            user.verifyTwoFactor();
         }
 
         user.clearTwoFactorPending();

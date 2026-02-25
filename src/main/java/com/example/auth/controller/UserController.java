@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final com.example.auth.service.TotpQrService totpQrService;
 
     @GetMapping("/me")
     public ResponseEntity<User> getMyProfile(@AuthenticationPrincipal UserDetails userDetails) {
@@ -41,8 +42,22 @@ public class UserController {
     public ResponseEntity<Object> change2fa(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody UserDto.TwoFactorChangeRequest request) {
-        // Simple mock for recovery - secret generation logic omitted for brevity but can be added back
-        userService.updateTwoFactorType(userDetails.getUsername(), request.getTwoFactorType(), null);
-        return ResponseEntity.ok().build();
+        
+        String secret = null;
+        java.util.Map<String, String> response = new java.util.HashMap<>();
+
+        if (request.getTwoFactorType() == com.example.auth.domain.TwoFactorType.GOOGLE_OTP) {
+            com.warrenstrange.googleauth.GoogleAuthenticator gAuth = new com.warrenstrange.googleauth.GoogleAuthenticator();
+            com.warrenstrange.googleauth.GoogleAuthenticatorKey key = gAuth.createCredentials();
+            secret = key.getKey();
+            
+            String qrCodeBase64 = totpQrService.generateQrCodeBase64(userDetails.getUsername(), secret);
+            response.put("secret", secret);
+            response.put("qrCodeBase64", qrCodeBase64);
+        }
+
+        userService.updateTwoFactorType(userDetails.getUsername(), request.getTwoFactorType(), secret);
+        
+        return ResponseEntity.ok(response);
     }
 }

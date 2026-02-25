@@ -164,6 +164,19 @@ public class AdminService {
         return null;
     }
 
+    @Transactional(readOnly = true)
+    public AdminDto.TotpSetupResponse getUserTwoFactorQr(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        if (user.getTwoFactorType() != TwoFactorType.GOOGLE_OTP || user.getTwoFactorSecret() == null) {
+            throw new IllegalArgumentException("해당 사용자는 Google OTP를 설정하지 않았습니다.");
+        }
+
+        String qrCodeBase64 = totpQrService.generateQrCodeBase64(user.getEmail(), user.getTwoFactorSecret());
+        return new AdminDto.TotpSetupResponse(user.getTwoFactorSecret(), qrCodeBase64);
+    }
+
     @Transactional
     public void unlockUser(Long id) {
         User user = userRepository.findById(id)

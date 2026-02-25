@@ -166,19 +166,36 @@
             `;
         }
 
-        function render2fa(type = 'GOOGLE_OTP') {
+        function render2fa(type = 'GOOGLE_OTP', secret = null, qrCodeBase64 = null) {
+            let extraHtml = '';
+            if (type === 'GOOGLE_OTP' && secret && qrCodeBase64) {
+                let qrSrc = qrCodeBase64.startsWith('data:image') ? qrCodeBase64 : 'data:image/png;base64,' + qrCodeBase64;
+                extraHtml = `
+                    <div class="mt-4 mb-4 text-sm bg-blue-50 border border-blue-200 p-3 rounded-lg text-slate-700 text-left">
+                        <p class="font-semibold text-blue-800 mb-1">💡 OTP 앱에 계정이 없으신가요?</p>
+                        <p class="text-xs text-slate-500 mb-2">아래 QR코드를 스캔하시거나 설정 키워드 값을 입력해주세요.</p>
+                        <img src="\${qrSrc}" class="w-32 h-32 mx-auto border-4 border-slate-100 rounded-xl mb-3 shadow-sm object-contain" alt="QR Code">
+                        <div class="font-mono text-center tracking-widest font-bold text-lg text-blue-600 bg-white border border-slate-200 rounded py-2">
+                            \${secret}
+                        </div>
+                    </div>
+                `;
+            }
+
             modalContent.innerHTML = `
                 <div class="text-center mb-6">
                     <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                     </div>
                     <h3 class="text-2xl font-extrabold text-slate-800 mb-2">2단계 인증</h3>
-                    <p class="text-slate-500 text-sm">${type === 'EMAIL' ? '이메일로 전송된' : 'OTP 앱의'} 인증 코드 6자리를 입력하세요</p>
+                    <p class="text-slate-500 text-sm">\${type === 'EMAIL' ? '이메일로 전송된' : 'OTP 앱의'} 인증 코드 6자리를 입력하세요</p>
                 </div>
                 
+                \${extraHtml}
+
                 <form onsubmit="handle2faVerify(event)" class="space-y-6">
                     <div class="flex justify-center gap-2">
-                        <input type="text" maxlength="6" id="otpCode" placeholder="000000" class="w-40 text-center text-3xl font-extrabold tracking-[0.5em] py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-blue-600">
+                        <input type="text" maxlength="6" id="otpCode" placeholder="000000" class="w-64 text-center text-3xl font-extrabold tracking-[0.4em] py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-blue-600">
                     </div>
                     <button type="submit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all">
                         인증 완료
@@ -208,7 +225,7 @@
 
                 if (data.status === 'REQUIRES_2FA') {
                     sessionStorage.setItem('pendingEmail', email);
-                    render2fa(data.twoFactorType);
+                    render2fa(data.twoFactorType, data.twoFactorSecret, data.qrCodeBase64);
                     return;
                 }
 

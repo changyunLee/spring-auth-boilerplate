@@ -19,11 +19,12 @@ import java.util.Base64;
 public class TotpQrService {
 
     public String generateQrCodeBase64(String email, String secret) {
-        String otpAuthUrl = GoogleAuthenticatorQRGenerator.getOtpAuthURL(
-                "AuthBoilerplate", email,
-                new GoogleAuthenticatorKey.Builder(secret).build());
-
         try {
+            String issuer = java.net.URLEncoder.encode("AuthBoilerplate", "UTF-8").replace("+", "%20");
+            String account = java.net.URLEncoder.encode(email, "UTF-8").replace("+", "%20");
+            String otpAuthUrl = String.format("otpauth://totp/%s:%s?secret=%s&issuer=%s",
+                    issuer, account, secret, issuer);
+
             QRCodeWriter writer = new QRCodeWriter();
             BitMatrix matrix = writer.encode(otpAuthUrl, BarcodeFormat.QR_CODE, 200, 200);
             BufferedImage image = MatrixToImageWriter.toBufferedImage(matrix);
@@ -31,7 +32,7 @@ public class TotpQrService {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(image, "PNG", baos);
             return Base64.getEncoder().encodeToString(baos.toByteArray());
-        } catch (WriterException | IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException("QR 코드 생성 실패", e);
         }
     }

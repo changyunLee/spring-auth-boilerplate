@@ -10,10 +10,10 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
@@ -35,6 +35,7 @@ spring:
 
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:8080}
+  allowed-origins: ${APP_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080}
   admin-password: ${ADMIN_INITIAL_PASSWORD:}
   admin-email: ${ADMIN_INITIAL_EMAIL:admin@example.com}
   jwt:

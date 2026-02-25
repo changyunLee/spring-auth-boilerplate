@@ -107,18 +107,21 @@ public class AuthDto {
         private String email;
         private String twoFactorSecret;
 
+        private String qrCodeBase64;
+
         public TokenResponse(String accessToken, String refreshToken) {
             this.accessToken = accessToken;
             this.refreshToken = refreshToken;
             this.status = "SUCCESS";
         }
 
-        public static TokenResponse requires2FA(String twoFactorType, String email, String secret) {
+        public static TokenResponse requires2FA(String twoFactorType, String email, String secret, String qrCodeBase64) {
             TokenResponse res = new TokenResponse(null, null);
             res.status = "REQUIRES_2FA";
             res.twoFactorType = twoFactorType;
             res.email = email;
             res.twoFactorSecret = secret;
+            res.qrCodeBase64 = qrCodeBase64;
             return res;
         }
     }

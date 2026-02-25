@@ -166,6 +166,24 @@
 
     </main>
 
+    <!-- QR Modal -->
+    <div id="qrModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="glass w-full max-w-sm rounded-[24px] shadow-2xl p-8 relative transform scale-95 transition-transform duration-300">
+            <button onclick="closeQrModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div class="text-center">
+                <h3 class="text-xl font-bold text-slate-800 mb-2" id="qrModalTitle">Google OTP 설정</h3>
+                <p class="text-sm text-slate-500 mb-6">아래 QR코드를 OTP 앱으로 스캔하세요.</p>
+                <img id="qrModalImg" src="" class="w-48 h-48 mx-auto border-4 border-slate-100 rounded-xl mb-6 shadow-sm object-contain" alt="QR Code">
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                    <p class="text-xs text-slate-500 mb-1">수동 등록 키</p>
+                    <p id="qrModalSecret" class="font-mono text-lg font-bold text-blue-600 tracking-widest break-all"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Inline API Utility
         const api = {
@@ -214,6 +232,9 @@
                     if(u.provider === 'LOCAL') {
                         acts.push(`<button onclick="promptPasswordReset(${u.id})" class="text-blue-500 hover:underline">비밀번호강제수정</button>`);
                         acts.push(`<button onclick="promptChange2fa(${u.id}, '${u.twoFactorType}')" class="text-indigo-500 hover:underline">2FA수정</button>`);
+                        if (u.twoFactorType === 'GOOGLE_OTP') {
+                            acts.push(`<button onclick="viewUserQr(${u.id})" class="text-cyan-500 hover:underline font-bold">QR보기</button>`);
+                        }
                     }
                     
                     if(u.role === 'ROLE_USER') acts.push(`<button onclick="execRoleChange(${u.id}, 'ROLE_ADMIN')" class="text-purple-600 hover:underline">운영자로</button>`);
@@ -270,9 +291,42 @@
             else return;
 
             try {
-                await api.request(`/api/admin/users/${id}/2fa`, { method: 'PUT', body: JSON.stringify({ twoFactorType: type }) });
-                alert('Success'); loadUsers(0);
+                const res = await api.request(`/api/admin/users/${id}/2fa`, { method: 'PUT', body: JSON.stringify({ twoFactorType: type }) });
+                alert('Success'); 
+                loadUsers(0);
+                if (type === 'GOOGLE_OTP' && res && res.qrCodeBase64) {
+                    showQrModal(res.qrCodeBase64, res.secret, 'Google OTP 발급 완료');
+                }
             } catch(e){ alert(e.message); }
+        }
+
+        async function viewUserQr(id) {
+            try {
+                const res = await api.request(`/api/admin/users/${id}/2fa-qr`, { method: 'GET' });
+                if (res && res.qrCodeBase64) {
+                    showQrModal(res.qrCodeBase64, res.secret, 'Google OTP 설정 정보');
+                }
+            } catch(e){ alert(e.message); }
+        }
+
+        function showQrModal(base64, secret, title) {
+            const modal = document.getElementById('qrModal');
+            document.getElementById('qrModalTitle').innerText = title || 'Google OTP 설정';
+            document.getElementById('qrModalImg').src = 'data:image/png;base64,' + base64;
+            document.getElementById('qrModalSecret').innerText = secret;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('opacity-100');
+                modal.querySelector('.glass').classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeQrModal() {
+            const modal = document.getElementById('qrModal');
+            modal.classList.remove('opacity-100');
+            modal.querySelector('.glass').classList.remove('scale-100');
+            setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
         async function execRoleChange(id, role) {

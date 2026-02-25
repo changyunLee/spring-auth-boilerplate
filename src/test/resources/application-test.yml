@@ -25,6 +25,7 @@ management:
       enabled: false
 
 app:
+  allowed-origins: http://localhost:3000,http://localhost:8080
   jwt:
     secret: dGVzdC1zZWNyZXQta2V5LXdpdGgtYXQtbGVhc3QtMjU2LWJpdHMtZm9yLXVuaXQtdGVzdGluZy1vbmx5Cg==
     access-expiration: 3600000

@@ -64,6 +64,11 @@ public class AdminController {
         return ResponseEntity.ok(adminService.changeUserTwoFactor(id, request));
     }
 
+    @GetMapping("/users/{id}/2fa-qr")
+    public ResponseEntity<AdminDto.TotpSetupResponse> getUserTwoFactorQr(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.getUserTwoFactorQr(id));
+    }
+
     @PutMapping("/users/{id}/unlock")
     public ResponseEntity<Void> unlockUser(@PathVariable Long id) {
         adminService.unlockUser(id);

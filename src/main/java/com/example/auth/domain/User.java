@@ -63,6 +63,10 @@ public class User {
     @Column(length = 20)
     private TwoFactorType twoFactorType;
 
+    @Comment("2FA 설정 이후 1회 이상 인증 성공 여부")
+    @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 0")
+    private boolean twoFactorVerified;
+
     @Comment("Google OTP 시크릿 키")
     @Column(length = 64)
     private String twoFactorSecret;
@@ -166,6 +170,11 @@ public class User {
     public void updateTwoFactor(TwoFactorType type, String secret) {
         this.twoFactorType = type;
         this.twoFactorSecret = secret;
+        this.twoFactorVerified = false;
+    }
+
+    public void verifyTwoFactor() {
+        this.twoFactorVerified = true;
     }
 
     // ── 프로필 비즈니스 메서드 ────────────────────────────────────────────
