@@ -30,6 +30,10 @@ dependencies {
     
     // MariaDB
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+
+    // Flyway (DB Migration)
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-mysql'
     
     // Lombok
     compileOnly 'org.projectlombok:lombok'

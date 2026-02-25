@@ -38,6 +38,7 @@ build/
 .DS_Store
 *.log
 *.sql
+!src/main/resources/db/migration/*.sql
 .env
 .plan
 .claude-plugin.md
