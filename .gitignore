@@ -41,3 +41,4 @@ build/
 .env
 .plan
 .claude-plugin.md
+fd/
