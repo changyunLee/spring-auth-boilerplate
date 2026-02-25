@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Auth Boilerplate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 overflow-x-hidden"
+      style="background-image: radial-gradient(circle at top right, #e0f2fe, transparent 40%), radial-gradient(circle at bottom left, #e2e8f0, transparent 40%); background-attachment: fixed;">
+
+    <!-- TOP NAVIGATION -->
+    <nav class="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
+        <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">
+            Auth<span class="text-blue-600">Boilerplate</span>
+        </h1>
+        <div class="flex items-center gap-4">
+            <a href="/admin.html" id="navAdminLink" class="hidden text-sm font-semibold text-emerald-600 hover:text-emerald-500 transition-colors">
+                ⚙️ 관리자 콘솔
+            </a>
+            <button onclick="logout()" class="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors">
+                로그아웃
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="max-w-7xl mx-auto px-8 pb-16 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- ADMIN AREA (Hidden by default) -->
+        <section id="adminArea" class="col-span-1 lg:col-span-12 hidden mb-4">
+            <div class="glass-panel rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-100 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 relative z-10">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800 mb-1 flex items-center gap-2">
+                            <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            관리자 요약
+                        </h2>
+                        <p class="text-slate-500 text-sm">시스템의 현재 핵심 지표입니다.</p>
+                    </div>
+                    <button onclick="window.location.href='/admin.html'" class="mt-4 md:mt-0 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-emerald-500/20 transition-all">
+                        관리자 콘솔 열기 &rarr;
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10" id="adminStatsGrid">
+                    <!-- JS Injects Stats Here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- LEFT COLUMN: Profile -->
+        <section class="col-span-1 lg:col-span-7 space-y-8">
+            <div class="glass-panel rounded-2xl shadow-xl overflow-hidden">
+                <div class="p-8 border-b border-slate-200 flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-slate-800">👤 내 프로필</h2>
+                    <button id="btnEditProfile" onclick="toggleEditMode()" class="text-sm text-blue-600 hover:text-blue-500 font-medium">수정 편집</button>
+                </div>
+                <div class="p-8">
+                    <!-- 뷰 모드 -->
+                    <div id="profileViewMode" class="space-y-6">
+                        <div class="flex items-center gap-6">
+                            <img id="viewAvatar" src="" class="w-20 h-20 rounded-full bg-slate-100 border-2 border-slate-200 object-cover" alt="Profile">
+                            <div>
+                                <h3 id="viewName" class="text-2xl font-bold text-slate-800"></h3>
+                                <p id="viewEmail" class="text-slate-500"></p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">가입일</p>
+                                <p id="viewJoined" class="text-sm font-medium text-slate-800"></p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">역할</p>
+                                <span id="viewRole" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 편집 모드 (숨김) -->
+                    <form id="profileEditMode" class="hidden space-y-6" onsubmit="saveProfile(event)">
+                        <div class="flex items-center gap-6">
+                            <img id="editAvatarPreview" src="" class="w-20 h-20 rounded-full bg-slate-100 border-2 border-blue-500/50 object-cover" alt="Profile">
+                            <div class="flex-1 space-y-4">
+                                <div>
+                                    <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1">이름 (표시명)</label>
+                                    <input type="text" id="editName" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1">프로필 이미지 URL</label>
+                                    <input type="url" id="editAvatarUrl" placeholder="https://" oninput="document.getElementById('editAvatarPreview').src=this.value || 'https://api.dicebear.com/7.x/avataaars/svg?seed=fallback'" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end gap-3 pt-4">
+                            <button type="button" onclick="toggleEditMode()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors border border-slate-200 bg-white">취소</button>
+                            <button type="submit" id="btnSaveProfile" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow-lg shadow-blue-500/20 transition-colors">
+                                저장
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT COLUMN: Security -->
+        <section class="col-span-1 lg:col-span-5 space-y-8">
+            
+            <!-- Security Info Card -->
+            <div class="glass-panel rounded-2xl shadow-xl p-8">
+                <h2 class="text-xl font-bold text-slate-800 mb-6">🔒 보안 정보</h2>
+                
+                <div class="space-y-5">
+                    <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                        <span class="text-sm text-slate-500">인증 방식</span>
+                        <div class="text-sm font-semibold text-slate-800 flex items-center gap-2" id="secProvider"></div>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                        <span class="text-sm text-slate-500">이메일 인증</span>
+                        <div id="secEmailVerified"></div>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                        <span class="text-sm text-slate-500">2단계 인증 (2FA)</span>
+                        <div class="flex items-center gap-3">
+                            <div id="sec2faType" class="text-sm font-medium text-slate-800"></div>
+                            <button id="btnChange2fa" onclick="changeMy2fa()" class="text-xs text-blue-600 hover:text-blue-500 font-medium">변경</button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-sm text-slate-500">계정 상태</span>
+                        <div id="secStatus"></div>
+                    </div>
+                </div>
+
+                <div id="lockedBanner" class="hidden mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                    <strong id="lockedBannerTitle" class="text-red-800 block mb-1"></strong>
+                    <span id="lockedBannerDesc"></span>
+                </div>
+            </div>
+
+            <!-- Password Change Card -->
+            <div class="glass-panel rounded-2xl shadow-xl p-8" id="passwordChangeCard">
+                <h2 class="text-xl font-bold text-slate-800 mb-6">🔑 비밀번호 변경</h2>
+                <form id="passwordForm" onsubmit="changePassword(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1">현재 비밀번호</label>
+                        <input type="password" id="currentPwd" required class="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1">새 비밀번호</label>
+                        <input type="password" id="newPwd" required class="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 uppercase tracking-wider mb-1">새 비밀번호 확인</label>
+                        <input type="password" id="newPwdConfirm" required class="w-full bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none shadow-sm">
+                    </div>
+                    <div class="pt-2">
+                        <button type="submit" id="btnChangePwd" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                            비밀번호 업데이트
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+        </section>
+
+    </main>
+
+    <!-- Scripts -->
+    <script>
+        // api.js inline
+        const api = {
+            async request(url, options = {}) {
+                const token = localStorage.getItem('token');
+                const headers = {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` }),
+                    ...options.headers
+                };
+
+                const response = await fetch(url, { ...options, headers });
+                
+                if (response.status === 401) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/index.html';
+                    return null;
+                }
+
+                if (!response.ok) {
+                    let errorMsg = 'API 요청에 실패했습니다.';
+                    try {
+                        const text = await response.text();
+                        try {
+                            const errData = JSON.parse(text);
+                            errorMsg = errData.message || errData.error || errorMsg;
+                        } catch (e) {
+                            errorMsg = text || errorMsg;
+                        }
+                    } catch (e) {
+                        console.error('Error reading response text', e);
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return await response.json();
+                }
+                return await response.text();
+            },
+            get(url, options = {}) { return this.request(url, { method: 'GET', ...options }); },
+            post(url, data, options = {}) { return this.request(url, { method: 'POST', body: JSON.stringify(data), ...options }); },
+            put(url, data, options = {}) { return this.request(url, { method: 'PUT', body: JSON.stringify(data), ...options }); },
+            delete(url, options = {}) { return this.request(url, { method: 'DELETE', ...options }); }
+        };
+
+        // toast.js inline
+        function showToast(message, type = 'success') {
+            let toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toast-container';
+                toastContainer.className = 'fixed bottom-4 right-4 z-[9999] flex flex-col gap-2';
+                document.body.appendChild(toastContainer);
+            }
+
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-red-600' : 'bg-slate-700');
+            toast.className = `min-w-[250px] px-4 py-3 rounded shadow-lg font-medium text-sm text-white transition-all duration-300 transform translate-y-4 opacity-0 ${bgClass}`;
+            toast.textContent = message;
+
+            toastContainer.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+            });
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-4', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+    <script>
+        // Init
+        window.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+        });
+
+        async function loadDashboard() {
+            try {
+                const user = await api.get('/api/user/me');
+                renderProfile(user);
+                renderSecurity(user);
+
+                if (user.role === 'ROLE_ADMIN') {
+                    document.getElementById('adminArea').classList.remove('hidden');
+                    document.getElementById('navAdminLink').classList.remove('hidden');
+                    loadAdminStats();
+                }
+
+                if (user.provider !== 'LOCAL') {
+                    // 소셜 로그인 회원은 비밀번호 변경 불가
+                    document.getElementById('passwordChangeCard').classList.add('opacity-50', 'pointer-events-none');
+                    document.getElementById('btnChangePwd').textContent = '소셜 계정은 지원하지 않음';
+                    
+                    // 2FA 변경 버튼 가리기
+                    const btn2fa = document.getElementById('btnChange2fa');
+                    if(btn2fa) {
+                        btn2fa.classList.add('hidden');
+                    }
+                }
+
+            } catch (err) {
+                console.error("Dashboard Load Error:", err);
+            }
+        }
+
+        // Render Profile
+        function renderProfile(user) {
+            const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`;
+            const avatar = user.profileImageUrl || defaultAvatar;
+            
+            // View Mode
+            document.getElementById('viewAvatar').src = avatar;
+            document.getElementById('viewName').textContent = user.displayName || '이름 없음';
+            document.getElementById('viewEmail').textContent = user.email;
+            document.getElementById('viewJoined').textContent = new Date(user.createdAt).toLocaleDateString();
+            
+            const roleBadge = document.getElementById('viewRole');
+            if (user.role === 'ROLE_ADMIN') {
+                roleBadge.textContent = '관리자';
+                roleBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200';
+            } else {
+                roleBadge.textContent = '일반 멤버';
+                roleBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200';
+            }
+
+            // Edit Mode Fields
+            document.getElementById('editAvatarPreview').src = avatar;
+            document.getElementById('editName').value = user.displayName || '';
+            document.getElementById('editAvatarUrl').value = user.profileImageUrl || '';
+        }
+
+        // Render Security
+        function renderSecurity(user) {
+            // Provider
+            let providerHtml = user.provider === 'GOOGLE' 
+                ? `<svg class="w-4 h-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Google`
+                : `<span class="px-2 py-0.5 rounded bg-slate-200 text-slate-700 text-xs">LOCAL</span>`;
+            document.getElementById('secProvider').innerHTML = providerHtml;
+
+            // Email Verified
+            const evHtml = user.emailVerified 
+                ? `<span class="flex items-center gap-1 text-xs text-emerald-600 font-semibold"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>인증됨</span>`
+                : `<span class="flex items-center gap-1 text-xs text-red-600 font-semibold"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>미인증</span>`;
+            document.getElementById('secEmailVerified').innerHTML = evHtml;
+
+            // 2FA Typography
+            currentActive2Fa = user.twoFactorType || 'NONE';
+            document.getElementById('sec2faType').textContent = currentActive2Fa === 'NONE' ? '사용 안함' : currentActive2Fa;
+
+            // Status
+            const isLocked = user.locked;
+            const isSuspended = user.suspended;
+
+            let statusHtml = '';
+            if (isSuspended) {
+                statusHtml = `<span class="px-2 py-0.5 rounded-md bg-red-100 text-red-700 border border-red-200 text-xs font-semibold">정지 (Suspended)</span>`;
+            } else if (isLocked) {
+                statusHtml = `<span class="px-2 py-0.5 rounded-md bg-orange-100 text-orange-700 border border-orange-200 text-xs font-semibold">잠금 (Locked)</span>`;
+            } else {
+                statusHtml = `<span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-semibold">정상 (Active)</span>`;
+            }
+            document.getElementById('secStatus').innerHTML = statusHtml;
+
+            if (isLocked || isSuspended) {
+                const banner = document.getElementById('lockedBanner');
+                banner.classList.remove('hidden');
+                const title = document.getElementById('lockedBannerTitle');
+                const desc = document.getElementById('lockedBannerDesc');
+                
+                if (isSuspended) {
+                    title.className = "text-red-800 block mb-1";
+                    title.textContent = "계정 정지됨";
+                    desc.textContent = `관리자에 의해 계정이 정지되었습니다. (사유: ${user.suspendedReason || '없음'})`;
+                } else {
+                    title.className = "text-orange-800 block mb-1";
+                    title.textContent = "계정 보호 잠금 중";
+                    desc.textContent = "비밀번호 반복 실패로 인해 계정이 잠금 처리되었습니다.";
+                }
+            }
+        }
+
+        // Admin Stats Loader
+        async function loadAdminStats() {
+            try {
+                const stats = await api.get('/api/admin/stats');
+                const grid = document.getElementById('adminStatsGrid');
+                grid.innerHTML = `
+                    <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                        <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">총 회원수</p>
+                        <p class="text-2xl font-bold text-slate-800">${stats.totalUsers.toLocaleString()}</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                        <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">최근 7일 가입</p>
+                        <p class="text-2xl font-bold text-emerald-600">+${stats.recentRegistrations.toLocaleString()}</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                        <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">잠금 계정</p>
+                        <p class="text-2xl font-bold ${stats.lockedCount > 0 ? 'text-red-500' : 'text-slate-400'}">${stats.lockedCount.toLocaleString()}</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                        <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">인증 비중</p>
+                        <p class="text-2xl font-bold text-blue-600">${stats.totalUsers > 0 ? Math.round((stats.emailVerifiedCount / stats.totalUsers) * 100) : 0}%</p>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Failed to load admin stats:', err);
+            }
+        }
+
+        // Profile Edit Toggles
+        function toggleEditMode() {
+            const view = document.getElementById('profileViewMode');
+            const edit = document.getElementById('profileEditMode');
+            const btn = document.getElementById('btnEditProfile');
+            
+            if (edit.classList.contains('hidden')) {
+                view.classList.add('hidden');
+                edit.classList.remove('hidden');
+                btn.classList.add('hidden');
+            } else {
+                view.classList.remove('hidden');
+                edit.classList.add('hidden');
+                btn.classList.remove('hidden');
+            }
+        }
+
+        // Save Profile
+        async function saveProfile(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSaveProfile');
+            btn.disabled = true;
+            btn.textContent = '저장 중...';
+
+            const payload = {
+                displayName: document.getElementById('editName').value,
+                profileImageUrl: document.getElementById('editAvatarUrl').value
+            };
+
+            try {
+                await api.put('/api/user/profile', payload);
+                showToast('프로필이 업데이트되었습니다.');
+                await loadDashboard();
+                toggleEditMode();
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '저장';
+            }
+        }
+
+        // Change Password
+        async function changePassword(e) {
+            e.preventDefault();
+            const current = document.getElementById('currentPwd').value;
+            const newPwd = document.getElementById('newPwd').value;
+            const confirmPwd = document.getElementById('newPwdConfirm').value;
+
+            if (newPwd !== confirmPwd) {
+                showToast('비밀번호 확인이 일치하지 않습니다.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btnChangePwd');
+            btn.disabled = true;
+
+            try {
+                await api.put('/api/user/password', {
+                    currentPassword: current,
+                    newPassword: newPwd
+                });
+                showToast('비밀번호가 변경되었습니다.');
+                document.getElementById('passwordForm').reset();
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        let currentActive2Fa = 'NONE';
+        
+        async function changeMy2fa() {
+            const types = ['NONE', 'EMAIL', 'GOOGLE_OTP'];
+            let msg = `변경할 2FA 방식을 숫자로 선택하세요.\n1. NONE\n2. EMAIL\n3. GOOGLE_OTP\n\n현재: ${currentActive2Fa}`;
+            let choice = prompt(msg);
+            if (!choice) return;
+            
+            let type = '';
+            if (choice === '1') type = 'NONE';
+            else if (choice === '2') type = 'EMAIL';
+            else if (choice === '3') type = 'GOOGLE_OTP';
+            else return;
+
+            try {
+                const res = await api.put(`/api/user/2fa`, { twoFactorType: type });
+                if (type === 'GOOGLE_OTP' && res && res.qrCodeBase64) {
+                    let win = window.open("", "_blank", "width=400,height=550");
+                    let qrSrc = res.qrCodeBase64.startsWith('data:image') ? res.qrCodeBase64 : 'data:image/png;base64,' + res.qrCodeBase64;
+                    win.document.write(`<html><body style="font-family:sans-serif;text-align:center;padding:20px;background:#f8fafc;color:#1e293b;">
+                        <h2 style="color:#2563eb">Google OTP 설정</h2>
+                        <img src="${qrSrc}" style="margin:20px auto;border:5px solid #e2e8f0;border-radius:10px;width:200px;">
+                        <p style="background:#f1f5f9;padding:10px;border-radius:8px;font-family:monospace;">${res.secret}</p>
+                        <button onclick="window.close()" style="margin-top:20px;padding:10px 20px;background:#2563eb;color:white;border:none;border-radius:5px;cursor:pointer;">완료</button>
+                    </body></html>`);
+                }
+                showToast('2FA 방식이 변경되었습니다.');
+                loadDashboard();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/index.html';
+        }
+    </script>
+</body>
+</html>

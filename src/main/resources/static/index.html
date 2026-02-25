@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Boilerplate - Welcome</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 overflow-x-hidden"
+      style="background-image: radial-gradient(circle at top right, #e0f2fe, transparent 40%), radial-gradient(circle at bottom left, #e2e8f0, transparent 40%); background-attachment: fixed;">
+
+    <!-- NAVIGATION -->
+    <nav class="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
+        <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">
+            Auth<span class="text-blue-600">Boilerplate</span>
+        </h1>
+        <div class="flex items-center gap-4">
+            <button onclick="openModal('login')" class="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors">로그인</button>
+            <button onclick="openModal('signup')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-sm font-bold shadow-lg shadow-blue-500/20 transition-all">
+                시작하기
+            </button>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <main class="max-w-7xl mx-auto px-8 pt-20 pb-32 text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-bold mb-8 transition-transform hover:scale-105">
+            <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            New Phase: OAuth2 & 2FA Integrated
+        </div>
+        
+        <h2 class="text-5xl md:text-7xl font-extrabold text-slate-800 mb-8 tracking-tight leading-tight">
+            안전하고 강력한<br/>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">인증 보일러플레이트</span>
+        </h2>
+        
+        <p class="text-slate-500 text-lg max-w-2xl mx-auto mb-12 leading-relaxed">
+            JWT, OAuth2, 2FA 그리고 관리자 콘솔까지.<br/>
+            표준 보안 아키텍처를 기반으로 설계된 현대적인 인증 시스템을 직접 경험해 보세요.
+        </p>
+
+        <div class="flex flex-wrap justify-center gap-6">
+            <button onclick="openModal('login')" class="px-8 py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl text-lg font-bold shadow-2xl transition-all hover:-translate-y-1">
+                데모 시작하기
+            </button>
+            <a href="https://github.com/example/repo" class="px-8 py-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-2xl text-lg font-bold shadow-sm transition-all hover:-translate-y-1 flex items-center gap-2">
+                Github 저장소 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            </a>
+        </div>
+    </main>
+
+    <!-- AUTH MODALS -->
+    <div id="authDialog" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="glass-panel w-full max-w-md rounded-3xl shadow-2xl p-8 relative overflow-hidden transform scale-95 transition-transform duration-300">
+            <!-- Modal Body -->
+            <div id="modalContent">
+                <!-- JS will inject here -->
+            </div>
+            <!-- Close Button -->
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script>
+        const authDialog = document.getElementById('authDialog');
+        const modalContainer = authDialog.querySelector('.glass-panel');
+        const modalContent = document.getElementById('modalContent');
+
+        function openModal(type) {
+            authDialog.classList.remove('hidden');
+            setTimeout(() => {
+                authDialog.classList.add('opacity-100');
+                modalContainer.classList.add('scale-100');
+            }, 10);
+
+            if (type === 'login') renderLogin();
+            else if (type === 'signup') renderSignup();
+            else if (type === '2fa') render2fa();
+        }
+
+        function closeModal() {
+            authDialog.classList.remove('opacity-100');
+            modalContainer.classList.remove('scale-100');
+            setTimeout(() => {
+                authDialog.classList.add('hidden');
+            }, 300);
+        }
+
+        function renderLogin() {
+            modalContent.innerHTML = `
+                <div class="text-center mb-8">
+                    <h3 class="text-2xl font-extrabold text-slate-800 mb-2">Welcome Back</h3>
+                    <p class="text-slate-500 text-sm">계정에 로그인하여 계속하세요</p>
+                </div>
+                
+                <form onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <input type="email" id="loginEmail" placeholder="이메일 주소" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-slate-900 shadow-sm">
+                    </div>
+                    <div>
+                        <input type="password" id="loginPassword" placeholder="비밀번호" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-slate-900 shadow-sm">
+                    </div>
+                    <button type="submit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all">
+                        로그인
+                    </button>
+                </form>
+
+                <div class="my-6 flex items-center gap-4 text-slate-300">
+                    <div class="flex-1 h-px bg-slate-200"></div>
+                    <span class="text-xs font-semibold text-slate-400">간편 로그인</span>
+                    <div class="flex-1 h-px bg-slate-200"></div>
+                </div>
+
+                <div class="space-y-3">
+                    <button onclick="window.location.href='/oauth2/authorization/google'" class="w-full flex items-center justify-center gap-3 py-3 bg-white border border-slate-200 rounded-xl text-slate-600 font-semibold hover:bg-slate-50 transition-colors shadow-sm">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                        Google 계정으로 로그인
+                    </button>
+                </div>
+
+                <p class="mt-8 text-center text-sm text-slate-500">
+                    계정이 없으신가요? <button onclick="renderSignup()" class="text-blue-600 font-bold hover:underline">회원가입</button>
+                </p>
+            `;
+        }
+
+        function renderSignup() {
+            modalContent.innerHTML = `
+                <div class="text-center mb-8">
+                    <h3 class="text-2xl font-extrabold text-slate-800 mb-2">Create Account</h3>
+                    <p class="text-slate-500 text-sm">함께 시작해 보세요.</p>
+                </div>
+                
+                <form onsubmit="handleSignup(event)" class="space-y-4">
+                    <div>
+                        <input type="email" id="signupEmail" placeholder="이메일 주소" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-slate-900 shadow-sm">
+                    </div>
+                    <div>
+                        <input type="password" id="signupPassword" placeholder="비밀번호" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-slate-900 shadow-sm">
+                        <p class="text-[10px] text-slate-400 mt-1 ml-1 font-medium">대소문자, 숫자, 특수문자 조합 8자 이상</p>
+                    </div>
+                    <button type="submit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all">
+                        회원가입
+                    </button>
+                </form>
+
+                <p class="mt-8 text-center text-sm text-slate-500">
+                    이미 계정이 있으신가요? <button onclick="renderLogin()" class="text-blue-600 font-bold hover:underline">로그인</button>
+                </p>
+            `;
+        }
+
+        function render2fa(type = 'GOOGLE_OTP') {
+            modalContent.innerHTML = `
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-extrabold text-slate-800 mb-2">2단계 인증</h3>
+                    <p class="text-slate-500 text-sm">${type === 'EMAIL' ? '이메일로 전송된' : 'OTP 앱의'} 인증 코드 6자리를 입력하세요</p>
+                </div>
+                
+                <form onsubmit="handle2faVerify(event)" class="space-y-6">
+                    <div class="flex justify-center gap-2">
+                        <input type="text" maxlength="6" id="otpCode" placeholder="000000" class="w-40 text-center text-3xl font-extrabold tracking-[0.5em] py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-blue-600">
+                    </div>
+                    <button type="submit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all">
+                        인증 완료
+                    </button>
+                </form>
+            `;
+        }
+
+        // --- Auth API Handlers ---
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (data.mfaRequired) {
+                        sessionStorage.setItem('pendingEmail', email);
+                        render2fa(data.mfaType);
+                        return;
+                    }
+                    throw new Error(data.message || '로그인 실패');
+                }
+
+                localStorage.setItem('token', data.accessToken);
+                window.location.href = '/dashboard.html';
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+
+            try {
+                const response = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.message || '회원가입 실패');
+                }
+
+                alert('회원가입 성공! 이메일 인증 후 로그인해 주세요.');
+                renderLogin();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        async function handle2faVerify(e) {
+            e.preventDefault();
+            const code = document.getElementById('otpCode').value;
+            const email = sessionStorage.getItem('pendingEmail');
+
+            try {
+                const response = await fetch('/api/auth/login/2fa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, code })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || '인증 실패');
+
+                localStorage.setItem('token', data.accessToken);
+                sessionStorage.removeItem('pendingEmail');
+                window.location.href = '/dashboard.html';
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+    </script>
+</body>
+</html>

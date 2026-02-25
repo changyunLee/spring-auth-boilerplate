@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Console - Auth Boilerplate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(0, 0, 0, 0.05); }
+        .tab-btn.active { border-bottom-color: #3b82f6; color: #1e293b; }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800" style="background-image: radial-gradient(circle at top, #e0f2fe, #f8fafc); background-attachment: fixed;">
+
+    <!-- TOP NAVIGATION -->
+    <nav class="flex items-center justify-between px-8 py-5 border-b border-slate-200 bg-white/50 backdrop-blur-md sticky top-0 z-40">
+        <h1 class="text-xl font-extrabold text-slate-800 tracking-tight">
+            Auth<span class="text-blue-600">Admin</span>
+        </h1>
+        <div class="flex gap-4">
+            <button onclick="window.location.href='/dashboard.html'" class="text-sm font-semibold text-blue-600 hover:text-blue-500">내 대시보드로</button>
+            <button onclick="logout()" class="text-sm font-semibold text-slate-500 hover:text-slate-800">로그아웃</button>
+        </div>
+    </nav>
+
+    <!-- TABS NAVIGATION -->
+    <div class="max-w-7xl mx-auto px-8 mt-6">
+        <div class="flex gap-8 border-b border-slate-200">
+            <button onclick="switchTab('users')" id="tab-users" class="tab-btn active pb-3 font-semibold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">Users</button>
+            <button onclick="switchTab('stats')" id="tab-stats" class="tab-btn pb-3 font-semibold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">Dashboard</button>
+            <button onclick="switchTab('audit')" id="tab-audit" class="tab-btn pb-3 font-semibold text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors">Audit Logs</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="max-w-7xl mx-auto px-8 py-8">
+
+        <!-- 1. USERS TAB -->
+        <section id="pane-users" class="block">
+            <div class="glass rounded-xl p-6 mb-6 shadow-sm">
+                <form id="userSearchForm" onsubmit="loadUsers(0); return false;" class="flex flex-wrap gap-4 items-end">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-xs text-slate-500 mb-1">Email</label>
+                        <input type="text" id="s_email" class="w-full bg-white border border-slate-300 rounded py-2 px-3 text-sm focus:ring-1 focus:ring-blue-500 text-slate-900 outline-none shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 mb-1">Role</label>
+                        <select id="s_role" class="bg-white border border-slate-300 rounded py-2 px-3 text-sm focus:ring-1 focus:ring-blue-500 text-slate-900 outline-none shadow-sm">
+                            <option value="">All</option>
+                            <option value="ROLE_USER">User</option>
+                            <option value="ROLE_ADMIN">Admin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 mb-1">Provider</label>
+                        <select id="s_provider" class="bg-white border border-slate-300 rounded py-2 px-3 text-sm focus:ring-1 focus:ring-blue-500 text-slate-900 outline-none shadow-sm">
+                            <option value="">All</option>
+                            <option value="LOCAL">Local</option>
+                            <option value="GOOGLE">Google</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold transition-colors shadow-sm">Search</button>
+                    <button type="reset" onclick="setTimeout(()=>loadUsers(0), 10)" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 px-4 py-2 rounded text-sm font-semibold transition-colors shadow-sm">Reset</button>
+                </form>
+            </div>
+
+            <div class="glass rounded-xl overflow-hidden min-h-[400px] shadow-sm">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-slate-100/80 text-slate-500 border-b border-slate-200 uppercase text-xs tracking-wider">
+                        <tr>
+                            <th class="px-6 py-4 font-semibold">ID</th>
+                            <th class="px-6 py-4 font-semibold">Email</th>
+                            <th class="px-6 py-4 font-semibold">Role</th>
+                            <th class="px-6 py-4 font-semibold">Provider</th>
+                            <th class="px-6 py-4 font-semibold">Status</th>
+                            <th class="px-6 py-4 font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody" class="divide-y divide-slate-100">
+                        <tr><td colspan="6" class="p-6 text-center text-slate-500">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-4 flex justify-between items-center text-sm">
+                <div id="userPageInfo" class="text-slate-500">Total: 0</div>
+                <div class="flex gap-2" id="userPagination"></div>
+            </div>
+        </section>
+
+
+        <!-- 2. STATS TAB -->
+        <section id="pane-stats" class="hidden space-y-8">
+            <!-- 8 Key Metrics -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="statsGrid">
+                <div class="glass rounded-xl p-5 text-center shadow-sm"><div class="animate-pulse h-12 bg-slate-200 rounded mb-2"></div></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass rounded-xl p-6 shadow-sm">
+                    <h3 class="text-lg font-bold mb-4 text-slate-800">Registration Trend (30 Days)</h3>
+                    <div class="relative h-64"><canvas id="regChart"></canvas></div>
+                </div>
+                <div class="glass rounded-xl p-6 shadow-sm">
+                    <h3 class="text-lg font-bold mb-4 text-slate-800">Login Activity (7 Days)</h3>
+                    <div class="relative h-64"><canvas id="loginChart"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 3. AUDIT LOGS TAB -->
+        <section id="pane-audit" class="hidden">
+            <div class="glass rounded-xl p-6 mb-6 flex flex-wrap gap-4 items-end justify-between shadow-sm">
+                <form id="auditSearchForm" onsubmit="loadAudit(0); return false;" class="flex flex-wrap gap-4 items-end flex-1">
+                    <div>
+                        <label class="block text-xs text-slate-500 mb-1">Action</label>
+                        <select id="a_action" class="bg-white border border-slate-300 rounded py-2 px-3 text-sm text-slate-900 outline-none shadow-sm">
+                            <option value="">All Actions</option>
+                            <option value="LOGIN_SUCCESS">LOGIN_SUCCESS</option>
+                            <option value="LOGIN_FAIL">LOGIN_FAIL</option>
+                            <option value="LOGOUT">LOGOUT</option>
+                            <option value="PASSWORD_RESET">PASSWORD_RESET</option>
+                            <option value="ROLE_CHANGE">ROLE_CHANGE</option>
+                            <option value="ACCOUNT_SUSPENDED">ACCOUNT_SUSPENDED</option>
+                            <option value="ACCOUNT_UNLOCK">ACCOUNT_UNLOCK</option>
+                            <option value="USER_DELETED">USER_DELETED</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 min-w-[200px] max-w-sm">
+                        <label class="block text-xs text-slate-500 mb-1">Target Email</label>
+                        <input type="text" id="a_email" class="w-full bg-white border border-slate-300 rounded py-2 px-3 text-sm text-slate-900 outline-none shadow-sm">
+                    </div>
+                    <button type="submit" class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded text-sm font-semibold transition-colors shadow-sm">Filter</button>
+                    <button type="reset" onclick="setTimeout(()=>loadAudit(0), 10)" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 px-4 py-2 rounded text-sm font-semibold transition-colors shadow-sm">Reset</button>
+                </form>
+                <button onclick="exportAuditCsv()" class="bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 rounded text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm">
+                    ⬇ CSV Export
+                </button>
+            </div>
+
+            <div class="glass rounded-xl overflow-x-auto min-h-[400px] shadow-sm">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-slate-100/80 text-slate-500 border-b border-slate-200 uppercase text-xs tracking-wider">
+                        <tr>
+                            <th class="px-5 py-4">Time</th>
+                            <th class="px-5 py-4">Action</th>
+                            <th class="px-5 py-4">Target</th>
+                            <th class="px-5 py-4">IP</th>
+                            <th class="px-5 py-4 w-full">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditTableBody" class="divide-y divide-slate-100 font-mono text-xs text-slate-800">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-4 flex justify-between items-center text-sm">
+                <div id="auditPageInfo" class="text-slate-500">Total: 0</div>
+                <div class="flex gap-2" id="auditPagination"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Inline API Utility
+        const api = {
+            async request(url, opts={}) {
+                const token = localStorage.getItem('token');
+                const headers = { 'Content-Type': 'application/json', ...(token && {'Authorization':`Bearer ${token}`}), ...opts.headers };
+                const res = await fetch(url, { ...opts, headers });
+                if (res.status === 401) { window.location.href='/index.html'; return; }
+                if (!res.ok) { const txt = await res.text(); throw new Error(txt || 'Error'); }
+                if (res.headers.get('content-type')?.includes('json')) return res.json();
+                return res.text();
+            }
+        };
+
+        function switchTab(tab) {
+            document.querySelectorAll('section[id^="pane-"]').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`pane-${tab}`).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'border-blue-500'));
+            document.getElementById(`tab-${tab}`).classList.add('active', 'border-blue-500');
+            if (tab === 'users') loadUsers(0);
+            if (tab === 'stats') loadStats();
+            if (tab === 'audit') loadAudit(0);
+        }
+
+        // --- USERS TAB ---
+        async function loadUsers(page) {
+            const email = document.getElementById('s_email').value;
+            const role = document.getElementById('s_role').value;
+            const provider = document.getElementById('s_provider').value;
+            try {
+                const res = await api.request(`/api/admin/users?page=${page}&email=${email}&role=${role}&provider=${provider}`);
+                const tbody = document.getElementById('userTableBody');
+                tbody.innerHTML = res.content.map(u => {
+                    const isLocked = u.locked;
+                    const isSuspended = u.suspended;
+                    let statusHtml = '';
+                    if(isSuspended) statusHtml = '<span class="px-2 py-0.5 rounded bg-red-100 text-red-700 border border-red-200">정지 (Suspended)</span>';
+                    else if(isLocked) statusHtml = '<span class="px-2 py-0.5 rounded bg-orange-100 text-orange-700 border border-orange-200">잠금 (Locked)</span>';
+                    else statusHtml = '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 border border-emerald-200">정상</span>';
+
+                    const acts = [];
+                    if (isLocked) acts.push(`<button onclick="execUserAction(${u.id}, 'unlock')" class="text-orange-600 hover:underline">잠금해제</button>`);
+                    if (isSuspended) acts.push(`<button onclick="execUserAction(${u.id}, 'unsuspend')" class="text-emerald-600 hover:underline">정지해제</button>`);
+                    else acts.push(`<button onclick="promptSuspend(${u.id})" class="text-red-500 hover:underline">정지설정</button>`);
+                    
+                    if(u.provider === 'LOCAL') {
+                        acts.push(`<button onclick="promptPasswordReset(${u.id})" class="text-blue-500 hover:underline">비밀번호강제수정</button>`);
+                        acts.push(`<button onclick="promptChange2fa(${u.id}, '${u.twoFactorType}')" class="text-indigo-500 hover:underline">2FA수정</button>`);
+                    }
+                    
+                    if(u.role === 'ROLE_USER') acts.push(`<button onclick="execRoleChange(${u.id}, 'ROLE_ADMIN')" class="text-purple-600 hover:underline">운영자로</button>`);
+                    if(u.role === 'ROLE_ADMIN') acts.push(`<button onclick="execRoleChange(${u.id}, 'ROLE_USER')" class="text-slate-500 hover:underline">일반유저로</button>`);
+
+                    return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4 text-slate-600">${u.id}</td>
+                        <td class="px-6 py-4 font-medium">${u.email}</td>
+                        <td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-[11px] font-bold ${u.role==='ROLE_ADMIN'?'bg-purple-100 text-purple-700 border border-purple-200':'bg-blue-100 text-blue-700 border border-blue-200'}">${u.role.replace('ROLE_','')}</span></td>
+                        <td class="px-6 py-4 text-slate-600">${u.provider}</td>
+                        <td class="px-6 py-4">${statusHtml}</td>
+                        <td class="px-6 py-4 flex flex-wrap gap-3">${acts.join(' ')}</td>
+                    </tr>
+                    `;
+                }).join('');
+                document.getElementById('userPageInfo').innerText = `Page ${res.number+1} of ${res.totalPages} (Total ${res.totalElements})`;
+                renderPagination('userPagination', res.totalPages, res.number, loadUsers);
+            } catch(e) { alert(e.message); }
+        }
+
+        async function execUserAction(id, action) {
+            try {
+                await api.request(`/api/admin/users/${id}/${action}`, { method: 'PUT' });
+                alert('Success'); loadUsers(0);
+            } catch(e){ alert(e.message); }
+        }
+
+        async function promptSuspend(id) {
+            const reason = prompt("정지 사유를 입력하세요:");
+            if (reason === null) return;
+            try {
+                await api.request(`/api/admin/users/${id}/suspend`, { method: 'PUT', body: JSON.stringify({ reason }) });
+                alert('Success'); loadUsers(0);
+            } catch(e){ alert(e.message); }
+        }
+
+        async function promptPasswordReset(id) {
+            const pwd = prompt("강제로 변경할 새 비밀번호를 입력하세요:");
+            if (!pwd) return;
+            try {
+                await api.request(`/api/admin/users/${id}/password`, { method: 'PUT', body: JSON.stringify({ newPassword: pwd }) });
+                alert('Success');
+            } catch(e){ alert(e.message); }
+        }
+        
+        async function promptChange2fa(id, current) {
+            const choice = prompt(`변경할 2FA 방식을 숫자로 선택하세요 (현재: ${current})\n1. NONE\n2. EMAIL\n3. GOOGLE_OTP`);
+            if(!choice) return;
+            let type = '';
+            if(choice === '1') type = 'NONE';
+            else if(choice === '2') type = 'EMAIL';
+            else if(choice === '3') type = 'GOOGLE_OTP';
+            else return;
+
+            try {
+                await api.request(`/api/admin/users/${id}/2fa`, { method: 'PUT', body: JSON.stringify({ twoFactorType: type }) });
+                alert('Success'); loadUsers(0);
+            } catch(e){ alert(e.message); }
+        }
+
+        async function execRoleChange(id, role) {
+            try {
+                await api.request(`/api/admin/users/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) });
+                alert('Success'); loadUsers(0);
+            } catch(e){ alert(e.message); }
+        }
+
+        // --- STATS TAB ---
+        let chartsObj = {};
+        async function loadStats() {
+            try {
+                const stats = await api.request('/api/admin/stats');
+                const secSum = await api.request('/api/admin/stats/security-summary');
+                const regTrend = await api.request('/api/admin/stats/registration-trend?days=30');
+                const loginTrend = await api.request('/api/admin/stats/login-activity?days=7');
+
+                // Render Info Cards
+                const grid = document.getElementById('statsGrid');
+                grid.innerHTML = `
+                    ${statCard('Total Users', stats.totalUsers, 'text-slate-800')}
+                    ${statCard('Admins', stats.adminCount, 'text-purple-600')}
+                    ${statCard('Local/Google', `${stats.localProviderCount} / ${stats.googleProviderCount}`, 'text-blue-600')}
+                    ${statCard('Verified Emails', stats.emailVerifiedCount, 'text-emerald-600')}
+                    
+                    ${statCard('7D Reg', `+${stats.recentRegistrations}`, 'text-emerald-600')}
+                    ${statCard('Locked', secSum.lockedAccounts, 'text-orange-500')}
+                    ${statCard('Suspended', secSum.suspendedAccounts, 'text-red-500')}
+                    ${statCard('24H Fail / IP', `${secSum.recentLoginFailures} / ${secSum.suspiciousIpCount}`, 'text-red-500')}
+                `;
+
+                // Render Charts
+                renderLineChart('regChart', regTrend.data.map(d=>d.date.slice(5)), regTrend.data.map(d=>d.count), '#10b981', 'Registrations');
+                
+                const labels = loginTrend.data.map(d=>d.date.slice(5));
+                const sData = loginTrend.data.map(d=>d.successCount);
+                const fData = loginTrend.data.map(d=>d.failCount);
+                
+                Chart.defaults.color = '#64748b'; // Tailwind slate-500
+                if (chartsObj['loginChart']) chartsObj['loginChart'].destroy();
+                chartsObj['loginChart'] = new Chart(document.getElementById('loginChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: 'Success', data: sData, backgroundColor: '#3b82f6' },
+                            { label: 'Fail', data: fData, backgroundColor: '#ef4444' }
+                        ]
+                    },
+                    options: { maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
+                });
+
+            } catch(e) { console.error(e); }
+        }
+
+        function statCard(label, val, colClass) {
+            return `
+                <div class="glass rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <p class="text-xs text-slate-500 uppercase tracking-wider mb-2">${label}</p>
+                    <p class="text-2xl font-bold ${colClass}">${val}</p>
+                </div>`;
+        }
+
+        function renderLineChart(id, labels, data, color, label) {
+            if (chartsObj[id]) chartsObj[id].destroy();
+            chartsObj[id] = new Chart(document.getElementById(id), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{ label, data, borderColor: color, backgroundColor: color+'20', fill: true, tension: 0.4 }]
+                },
+                options: { maintainAspectRatio: false }
+            });
+        }
+
+        // --- AUDIT LOGS TAB ---
+        async function loadAudit(page) {
+            const action = document.getElementById('a_action').value;
+            const email = document.getElementById('a_email').value;
+            try {
+                const res = await api.request(`/api/admin/audit-logs?page=${page}&action=${action}&targetEmail=${email}`);
+                const tbody = document.getElementById('auditTableBody');
+                if(!res.content || res.content.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">데이터가 없습니다.</td></tr>`;
+                } else {
+                    tbody.innerHTML = res.content.map(l => {
+                        let color = 'text-slate-600';
+                        if(l.action.includes('SUCCESS')) color = 'text-emerald-600';
+                        if(l.action.includes('FAIL') || l.action.includes('SUSPEND') || l.action.includes('DELETE')) color = 'text-red-500';
+                        if(l.action.includes('CHANGE') || l.action.includes('RESET')) color = 'text-orange-500';
+
+                        return `
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-5 py-3 text-slate-600">${l.createdAt.replace('T', ' ')}</td>
+                            <td class="px-5 py-3 font-bold ${color}">${l.action}</td>
+                            <td class="px-5 py-3 text-slate-700">${l.targetEmail || '-'}</td>
+                            <td class="px-5 py-3 text-slate-500">${l.ipAddress || '-'}</td>
+                            <td class="px-5 py-3 text-slate-500 truncate max-w-xs" title="${l.details||''}">${l.details || '-'}</td>
+                        </tr>
+                        `;
+                    }).join('');
+                }
+                document.getElementById('auditPageInfo').innerText = `Page ${res.number+1} of ${res.totalPages} (Total ${res.totalElements})`;
+                renderPagination('auditPagination', res.totalPages, res.number, loadAudit);
+            } catch(e) { console.error(e); }
+        }
+
+        function exportAuditCsv() {
+            const token = localStorage.getItem('token');
+            const action = document.getElementById('a_action').value;
+            const email = document.getElementById('a_email').value;
+            window.location.href = `/api/admin/audit-logs/export?token=${token}&action=${action}&targetEmail=${email}`;
+        }
+
+        // COMMON
+        function renderPagination(containerId, totalPages, currPage, fetchFn) {
+            const c = document.getElementById(containerId);
+            if(totalPages <= 1) { c.innerHTML = ''; return; }
+            let btns = '';
+            for(let i=0; i<totalPages; i++) {
+                if (i===0 || i===totalPages-1 || Math.abs(currPage-i)<=2) {
+                    btns += `<button data-page="${i}" onclick="(${fetchFn.name})(${i})" class="px-3 py-1 rounded text-sm transition-colors border ${i===currPage?'bg-blue-600 text-white border-blue-600 active':'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'}">${i+1}</button>`;
+                } else if (Math.abs(currPage-i)===3) {
+                    btns += `<span class="px-2 py-1 text-slate-400">...</span>`;
+                }
+            }
+            c.innerHTML = btns;
+        }
+
+        function logout() { localStorage.clear(); window.location.href='/index.html'; }
+
+        // Start
+        window.onload = () => switchTab('users');
+    </script>
+</body>
+</html>
