@@ -1,5 +1,6 @@
 package com.example.auth.scheduler;
 
+import com.example.auth.repository.BlacklistedTokenRepository;
 import com.example.auth.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 public class TokenCleanupScheduler {
 
     private final RefreshTokenRepository refreshTokenRepository;
+    private final BlacklistedTokenRepository blacklistedTokenRepository;
     private final AuditLogRepository auditLogRepository;
 
     @Value("${audit.log.retention-days:90}")
@@ -25,12 +27,14 @@ public class TokenCleanupScheduler {
     @Scheduled(cron = "0 0 2 * * *") // 매일 새벽 2시
     @Transactional
     public void cleanupExpiredTokens() {
-        log.info("만료된 Refresh Token 및 오래된 감사 로그 정리 시작...");
-        int countTokens = refreshTokenRepository.deleteByExpiresAtBefore(LocalDateTime.now());
-        
+        log.info("만료된 토큰 및 오래된 감사 로그 정리 시작...");
+
+        int countRt = refreshTokenRepository.deleteByExpiresAtBefore(LocalDateTime.now());
+        int countBt = blacklistedTokenRepository.deleteByExpiresAtBefore(LocalDateTime.now());
+
         LocalDateTime cutoff = LocalDateTime.now().minusDays(auditLogRetentionDays);
         int countLogs = auditLogRepository.deleteByCreatedAtBefore(cutoff);
-        
-        log.info("완료: {} 개의 만료된 토큰 및 {} 개의 오래된 감사 로그가 삭제되었습니다.", countTokens, countLogs);
+
+        log.info("완료: RT {} 건, 블랙리스트 AT {} 건, 감사 로그 {} 건 삭제.", countRt, countBt, countLogs);
     }
 }

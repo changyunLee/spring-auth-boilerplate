@@ -38,13 +38,23 @@ class FlywayMigrationTest {
     private JavaMailSender javaMailSender;
 
     @Test
-    @DisplayName("Flyway V1 마이그레이션 후 5개 테이블이 모두 생성된다")
+    @DisplayName("Flyway 마이그레이션 후 6개 테이블이 모두 생성된다")
     void allRequiredTablesExistAfterMigration() {
         assertTableExists("users");
         assertTableExists("refresh_tokens");
         assertTableExists("email_verification_tokens");
         assertTableExists("password_reset_tokens");
         assertTableExists("audit_logs");
+        assertTableExists("blacklisted_tokens");
+    }
+
+    @Test
+    @DisplayName("blacklisted_tokens 테이블에 필수 컬럼이 존재한다")
+    void blacklistedTokensTableHasRequiredColumns() {
+        assertColumnExists("blacklisted_tokens", "id");
+        assertColumnExists("blacklisted_tokens", "token_hash");
+        assertColumnExists("blacklisted_tokens", "expires_at");
+        assertColumnExists("blacklisted_tokens", "created_at");
     }
 
     @Test
