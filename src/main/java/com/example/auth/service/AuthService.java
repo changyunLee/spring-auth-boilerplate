@@ -2,6 +2,7 @@ package com.example.auth.service;
 
 import com.example.auth.domain.EmailVerificationToken;
 import com.example.auth.domain.PasswordResetToken;
+import com.example.auth.domain.Provider;
 import com.example.auth.domain.RefreshToken;
 import com.example.auth.domain.Role;
 import com.example.auth.domain.TwoFactorType;
@@ -54,6 +55,7 @@ public class AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.ROLE_USER)
+                .provider(Provider.LOCAL)
                 .build();
 
         Long userId = userRepository.save(user).getId();
@@ -84,6 +86,14 @@ public class AuthService {
     public AuthDto.TokenResponse login(AuthDto.LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일이거나, 비밀번호가 틀렸습니다."));
+
+        if (user.getDeletedAt() != null) {
+            throw new IllegalArgumentException("가입되지 않은 이메일이거나, 비밀번호가 틀렸습니다.");
+        }
+
+        if (user.isSuspended()) {
+            throw new IllegalArgumentException("정지된 계정입니다.");
+        }
 
         if (user.isLocked()) {
             throw new AccountLockedException("비밀번호 5회 오류로 계정이 30분간 잠겼습니다.");

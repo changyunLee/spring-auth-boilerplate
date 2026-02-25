@@ -1,6 +1,9 @@
 package com.example.auth.config;
 
+import com.example.auth.security.CustomOAuth2UserService;
+import com.example.auth.security.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.example.auth.security.JwtAuthenticationFilter;
+import com.example.auth.security.OAuth2SuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +23,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -27,12 +33,20 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index.html", "/static/**", "/api/auth/**", "/oauth2/**").permitAll()
+                .requestMatchers("/", "/index.html", "/static/**", "/api/auth/**",
+                        "/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint(unauthorizedEntryPoint())
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .authorizationEndpoint(endpoint -> endpoint
+                    .authorizationRequestRepository(cookieAuthorizationRequestRepository))
+                .userInfoEndpoint(userInfo -> userInfo
+                    .userService(customOAuth2UserService))
+                .successHandler(oAuth2SuccessHandler)
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

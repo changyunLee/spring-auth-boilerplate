@@ -1,5 +1,6 @@
 package com.example.auth.security;
 
+import com.example.auth.service.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
     private final UserDetailsService userDetailsService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -29,7 +31,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String jwt = getJwtFromRequest(request);
 
-            if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
+            if (StringUtils.hasText(jwt)
+                    && tokenProvider.validateToken(jwt)
+                    && !tokenBlacklistService.isBlacklisted(jwt)) {
                 String email = tokenProvider.getEmailFromJWT(jwt);
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
@@ -39,7 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception ex) {
-            // Log error
+            // JWT 파싱 실패 시 SecurityContext를 설정하지 않고 계속 진행
         }
 
         filterChain.doFilter(request, response);
