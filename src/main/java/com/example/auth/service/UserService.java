@@ -25,8 +25,7 @@ public class UserService {
     @Transactional
     public void updateProfile(String email, UserDto.ProfileUpdateRequest request) {
         User user = findByEmail(email);
-        user.setDisplayName(request.getDisplayName());
-        user.setProfileImageUrl(request.getProfileImageUrl());
+        user.updateProfile(request.getDisplayName(), request.getProfileImageUrl());
     }
 
     @Transactional
@@ -35,15 +34,12 @@ public class UserService {
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new RuntimeException("현재 비밀번호가 일치하지 않습니다.");
         }
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.changePassword(passwordEncoder.encode(request.getNewPassword()));
     }
 
     @Transactional
     public void updateTwoFactorType(String email, TwoFactorType type, String secret) {
         User user = findByEmail(email);
-        user.setTwoFactorType(type);
-        if (secret != null) {
-            user.setTwoFactorSecret(secret);
-        }
+        user.updateTwoFactor(type, secret);
     }
 }
