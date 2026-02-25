@@ -73,4 +73,32 @@ class UserControllerTest {
         mockMvc.perform(get("/api/user/me"))
                 .andExpect(status().isUnauthorized()); // OAuth2 추가 후 401 반환
     }
+
+    @Test
+    @DisplayName("비밀번호 변경 실패 - 현재 비밀번호 불일치 (400)")
+    void testChangePasswordWithIncorrectCurrentPassword() throws Exception {
+        // given
+        String email = "pwd@example.com";
+        User user = User.builder()
+                .email(email)
+                .password(passwordEncoder.encode("correct123!"))
+                .role(Role.ROLE_USER)
+                .build();
+        userRepository.save(user);
+
+        String token = jwtTokenProvider.createToken(email, user.getRole().name());
+
+        String requestJson = "{" +
+                "\"currentPassword\": \"wrong123!\"," +
+                "\"newPassword\": \"newPassword123!\"" +
+                "}";
+
+        // when & then
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/user/password")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("현재 비밀번호가 일치하지 않습니다."));
+    }
 }

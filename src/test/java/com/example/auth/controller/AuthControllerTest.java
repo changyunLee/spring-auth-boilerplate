@@ -82,4 +82,61 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.accessToken").exists())
                 .andExpect(jsonPath("$.refreshToken").exists());
     }
+
+    @Test
+    @DisplayName("로그인 실패 - 비밀번호 불일치 (400)")
+    void testLoginWithIncorrectPassword() throws Exception {
+        User user = User.builder()
+                .email("wrongpwd@example.com")
+                .password(passwordEncoder.encode("password123"))
+                .role(Role.ROLE_USER)
+                .build();
+        userRepository.save(user);
+
+        AuthDto.LoginRequest request = new AuthDto.LoginRequest();
+        request.setEmail("wrongpwd@example.com");
+        request.setPassword("wrongpassword");
+
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("가입되지 않은 이메일이거나, 비밀번호가 틀렸습니다."));
+    }
+
+    @Test
+    @DisplayName("로그인 실패 - 존재하지 않는 이메일 (400)")
+    void testLoginWithNonExistentEmail() throws Exception {
+        AuthDto.LoginRequest request = new AuthDto.LoginRequest();
+        request.setEmail("nonexistent@example.com");
+        request.setPassword("password123");
+
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("가입되지 않은 이메일이거나, 비밀번호가 틀렸습니다."));
+    }
+
+    @Test
+    @DisplayName("로그인 실패 - 정지된 계정 (400)")
+    void testLoginWithSuspendedAccount() throws Exception {
+        User user = User.builder()
+                .email("suspended@example.com")
+                .password(passwordEncoder.encode("password123"))
+                .role(Role.ROLE_USER)
+                .suspended(true)
+                .build();
+        userRepository.save(user);
+
+        AuthDto.LoginRequest request = new AuthDto.LoginRequest();
+        request.setEmail("suspended@example.com");
+        request.setPassword("password123");
+
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("정지된 계정입니다."));
+    }
 }
